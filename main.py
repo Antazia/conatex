@@ -1,10 +1,28 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/microscope-info")
-def get_microscope_info():
-    return {
-        "message": "Si vous cherchez un microscope, voici quelques conseils...",
-        "details": "Les microscopes optiques sont les plus courants. Si vous voulez un modèle numérique, pensez aux options avec caméra intégrée."
-    }
+# Définition du format de la requête (basé sur ta fonction OpenAI)
+class MicroscopeRequest(BaseModel):
+    symbol: str
+
+# Base de données fictive des microscopes
+MICROSCOPE_DATA = {
+    "MS100": "Le MS100 est un microscope optique adapté aux débutants.",
+    "PRO200": "Le PRO200 est un microscope professionnel avec caméra intégrée.",
+    "BIOX500": "Le BIOX500 est idéal pour les analyses biologiques avancées.",
+    "DIGI800": "Le DIGI800 est un microscope numérique avec écran tactile.",
+}
+
+@app.post("/get_microscope_info")
+def get_microscope_info(request: MicroscopeRequest):
+    symbol = request.symbol.upper()  # Normaliser en majuscules
+
+    if symbol in MICROSCOPE_DATA:
+        return {
+            "symbol": symbol,
+            "description": MICROSCOPE_DATA[symbol]
+        }
+    else:
+        raise HTTPException(status_code=404, detail="Microscope non trouvé")
